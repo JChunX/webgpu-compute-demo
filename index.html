@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>WebGPU Matrix Multiplication</title>
+    <title>WebGPU Matrix Multiplication and Basic Attention</title>
 </head>
 <style>
     body {
@@ -12,10 +12,11 @@
     }
 </style>
 <body>
-    <h1>WebGPU Matrix Multiplication Demo</h1>
-    <p><span id="result"></span></p>
-    <div><button style="font-family:verdana;" onclick="multiplyMatrices()">Compute</button></div>
+    <h1>WebGPU Matrix Multiplication and Basic Attention Demo</h1>
+    <div><button style="font-family:verdana;" onclick="multiplyMatrices()">Compute Matrix Multiplication</button></div>
+    <div><button style="font-family:verdana;" onclick="basicAttention()">Compute Baisc Attention</button></div>
 	<div id="buffer-contents" style="font-family:verdana;"></div>
+    <p><span id="result"></span></p>
 
     <script src="compute.js"></script>
 </body>
