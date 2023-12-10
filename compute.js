@@ -198,7 +198,7 @@ async function multiplyMatrices() {
 }
 
 async function basicAttention() {
-
+    
     // === Get a GPU device ===
     if (!navigator.gpu) throw Error("WebGPU not supported.");
     const adapter = await navigator.gpu.requestAdapter();
@@ -212,7 +212,7 @@ async function basicAttention() {
     if (!device) throw Error("Could not request WebGPU logical device.");
 
     // === Define matrices ===
-    const n = Math.floor(Math.random() * 19 + 2), d = Math.floor(Math.random() * 5 + 1);
+    const n = 500, d = 256;
     var matrixQ = new Float32Array(n * d + 2);
     matrixQ[0] = n; matrixQ[1] = d;
     for (let i = 0; i < n * d; i++) matrixQ[i + 2] = Math.random() * 5;
@@ -278,22 +278,19 @@ async function basicAttention() {
         usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
         mappedAtCreation: true,
     });
-    new Float32Array(stagingQBuffer.getMappedRange()).set(matrixQ);
-    stagingQBuffer.unmap();
+
     const stagingKBuffer = device.createBuffer({
         size: matrixK.byteLength,
         usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
         mappedAtCreation: true,
     });
-    new Float32Array(stagingKBuffer.getMappedRange()).set(matrixK);
-    stagingKBuffer.unmap();
+
     const stagingVBuffer = device.createBuffer({
         size: matrixV.byteLength,
         usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
         mappedAtCreation: true,
     });
-    new Float32Array(stagingVBuffer.getMappedRange()).set(matrixV);
-    stagingVBuffer.unmap();
+
     // GPU buffers needed for the shader
     const matrixQBuffer = device.createBuffer({
         size: matrixQ.byteLength,
@@ -356,6 +353,13 @@ async function basicAttention() {
     });
     
     // === Submit the commands to the GPU ===
+    let time_0 = performance.now();
+    new Float32Array(stagingQBuffer.getMappedRange()).set(matrixQ);
+    stagingQBuffer.unmap();
+    new Float32Array(stagingKBuffer.getMappedRange()).set(matrixK);
+    stagingKBuffer.unmap();
+    new Float32Array(stagingVBuffer.getMappedRange()).set(matrixV);
+    stagingVBuffer.unmap();
     const commandEncoder = device.createCommandEncoder();
     // Inputs
     commandEncoder.copyBufferToBuffer(stagingQBuffer, 0, matrixQBuffer, 0, matrixQ.byteLength);
@@ -380,6 +384,9 @@ async function basicAttention() {
     const copiedResult = Array.from(result);
     stagingOBuffer.unmap();
 
+    let time_1 = performance.now();
+    console.log("[BasicAttention] Time taken: " + (time_1 - time_0) + "ms");
+
     // === Display the result ===
     const inputStringQ = matrixToString(matrixQ);
     const inputStringK = matrixToString(matrixK);
@@ -389,10 +396,10 @@ async function basicAttention() {
                                                   "<td>Input K:\n" + inputStringK + "</td>" +
                                                   "<td>Input V:\n" + inputStringV + "</td></tr></table>" +
                                                   "Attention Result:\n" + resultString;
+
 }
 
 async function flashAttention() {
-
     // === Get a GPU device ===
     if (!navigator.gpu) throw Error("WebGPU not supported.");
     const adapter = await navigator.gpu.requestAdapter();
@@ -407,7 +414,7 @@ async function flashAttention() {
 
     // === Define matrices ===
     //const n = Math.floor(Math.random() * 19 + 2), d = Math.floor(Math.random() * 5 + 1);
-    const n = 500, d = 64;
+    const n = 500, d = 256;
     var matrixQ = new Float32Array(n * d + 2);
     matrixQ[0] = n; matrixQ[1] = d;
     for (let i = 0; i < n * d; i++) matrixQ[i + 2] = Math.random() * 5;
@@ -568,7 +575,7 @@ async function flashAttention() {
             entryPoint: "main",
         },
     });
-
+    
     // === Create buffers ===
     // Staging buffers for efficient cpu -> gpu data transfer
     const stagingQBuffer = device.createBuffer({
@@ -576,58 +583,49 @@ async function flashAttention() {
         usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
         mappedAtCreation: true,
     });
-    new Float32Array(stagingQBuffer.getMappedRange()).set(matrixQ);
-    stagingQBuffer.unmap();
+
     const stagingKBuffer = device.createBuffer({
         size: matrixK.byteLength,
         usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
         mappedAtCreation: true,
     });
-    new Float32Array(stagingKBuffer.getMappedRange()).set(matrixK);
-    stagingKBuffer.unmap();
+
     const stagingVBuffer = device.createBuffer({
         size: matrixV.byteLength,
         usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
         mappedAtCreation: true,
     });
-    new Float32Array(stagingVBuffer.getMappedRange()).set(matrixV);
-    stagingVBuffer.unmap();
+
     const stagingLBuffer = device.createBuffer({
         size: matrixL.byteLength,
         usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
         mappedAtCreation: true,
     });
-    new Float32Array(stagingLBuffer.getMappedRange()).set(matrixL);
-    stagingLBuffer.unmap();
+
     const stagingMBuffer = device.createBuffer({
         size: matrixM.byteLength,
         usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
         mappedAtCreation: true,
     });
-    new Float32Array(stagingMBuffer.getMappedRange()).set(matrixM);
-    stagingMBuffer.unmap();
+
 
     const stagingQPatchBuffer = device.createBuffer({
         size: patchQ.byteLength,
         usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
         mappedAtCreation: true,
     });
-    new Float32Array(stagingQPatchBuffer.getMappedRange()).set(patchQ);
-    stagingQPatchBuffer.unmap();
+
     const stagingKPatchBuffer = device.createBuffer({
         size: patchK.byteLength,
         usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
         mappedAtCreation: true,
     });
-    new Float32Array(stagingKPatchBuffer.getMappedRange()).set(patchK);
-    stagingKPatchBuffer.unmap();
+
     const stagingVPatchBuffer = device.createBuffer({
         size: patchV.byteLength,
         usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
         mappedAtCreation: true,
     });
-    new Float32Array(stagingVPatchBuffer.getMappedRange()).set(patchV);
-    stagingVPatchBuffer.unmap();
 
     // GPU buffers needed for the shader
     const matrixQBuffer = device.createBuffer({
@@ -788,6 +786,24 @@ async function flashAttention() {
     });
     
     // === Submit the commands to the GPU ===
+
+    let time_0 = performance.now();
+    new Float32Array(stagingQBuffer.getMappedRange()).set(matrixQ);
+    stagingQBuffer.unmap();
+    new Float32Array(stagingKBuffer.getMappedRange()).set(matrixK);
+    stagingKBuffer.unmap();
+    new Float32Array(stagingVBuffer.getMappedRange()).set(matrixV);
+    stagingVBuffer.unmap();
+    new Float32Array(stagingLBuffer.getMappedRange()).set(matrixL);
+    stagingLBuffer.unmap();
+    new Float32Array(stagingMBuffer.getMappedRange()).set(matrixM);
+    stagingMBuffer.unmap();
+    new Float32Array(stagingQPatchBuffer.getMappedRange()).set(patchQ);
+    stagingQPatchBuffer.unmap();
+    new Float32Array(stagingKPatchBuffer.getMappedRange()).set(patchK);
+    stagingKPatchBuffer.unmap();
+    new Float32Array(stagingVPatchBuffer.getMappedRange()).set(patchV);
+    stagingVPatchBuffer.unmap();
     const commandEncoder = device.createCommandEncoder();
     // Inputs
     commandEncoder.copyBufferToBuffer(stagingQBuffer, 0, matrixQBuffer, 0, matrixQ.byteLength);
@@ -798,6 +814,8 @@ async function flashAttention() {
     commandEncoder.copyBufferToBuffer(stagingQPatchBuffer, 0, patchQBuffer, 0, patchQ.byteLength);
     commandEncoder.copyBufferToBuffer(stagingKPatchBuffer, 0, patchKBuffer, 0, patchK.byteLength);
     commandEncoder.copyBufferToBuffer(stagingVPatchBuffer, 0, patchVBuffer, 0, patchV.byteLength);
+
+
     // Compute
     for (let j = 0; j < Math.ceil(n / bc); j++) {
         commandEncoder.copyBufferToBuffer(matrixKBuffer, (bc * j * d + 2) * Float32Array.BYTES_PER_ELEMENT,
@@ -819,21 +837,21 @@ async function flashAttention() {
             commandEncoder.copyBufferToBuffer(matrixMBuffer, (br * i + 2) * Float32Array.BYTES_PER_ELEMENT,
                                               patchMBuffer, 2 * Float32Array.BYTES_PER_ELEMENT,
                                               Math.min(br, n - i * br) * Float32Array.BYTES_PER_ELEMENT);
-            const passEncoder1 = commandEncoder.beginComputePass();
-            passEncoder1.setPipeline(pipeline1);
-            passEncoder1.setBindGroup(0, bindGroup1);
-            passEncoder1.dispatchWorkgroups(Math.ceil(br / 8), Math.ceil(bc / 8));
-            passEncoder1.end();
-            const passEncoder2 = commandEncoder.beginComputePass();
-            passEncoder2.setPipeline(pipeline2);
-            passEncoder2.setBindGroup(0, bindGroup2);
-            passEncoder2.dispatchWorkgroups(Math.ceil(br / 64));
-            passEncoder2.end();
-            const passEncoder3 = commandEncoder.beginComputePass();
-            passEncoder3.setPipeline(pipeline3);
-            passEncoder3.setBindGroup(0, bindGroup3);
-            passEncoder3.dispatchWorkgroups(Math.ceil(br / 8), Math.ceil(d / 8));
-            passEncoder3.end();
+
+            const passEncoder = commandEncoder.beginComputePass();
+            passEncoder.setPipeline(pipeline1);
+            passEncoder.setBindGroup(0, bindGroup1);
+            passEncoder.dispatchWorkgroups(Math.ceil(br / 8), Math.ceil(bc / 8));
+
+            passEncoder.setPipeline(pipeline2);
+            passEncoder.setBindGroup(0, bindGroup2);
+            passEncoder.dispatchWorkgroups(Math.ceil(br / 64));
+
+            passEncoder.setPipeline(pipeline3);
+            passEncoder.setBindGroup(0, bindGroup3);
+            passEncoder.dispatchWorkgroups(Math.ceil(br / 8), Math.ceil(d / 8));
+            passEncoder.end();
+
             commandEncoder.copyBufferToBuffer(patchOBuffer, 2 * Float32Array.BYTES_PER_ELEMENT,
                                               matrixOBuffer, (br * i * d + 2) * Float32Array.BYTES_PER_ELEMENT,
                                               Math.min(br, n - i * br) * d * Float32Array.BYTES_PER_ELEMENT);
@@ -846,6 +864,7 @@ async function flashAttention() {
         }
     }
     // Output
+    
     commandEncoder.copyBufferToBuffer(matrixOBuffer, 0, stagingOBuffer, 0, (n * d + 2) * Float32Array.BYTES_PER_ELEMENT);
     const commands = commandEncoder.finish();
     device.queue.submit([commands]);
@@ -857,6 +876,8 @@ async function flashAttention() {
     const copiedResult = Array.from(result);
     stagingOBuffer.unmap();
 
+    let time_1 = performance.now();
+    console.log("[FlashAttention] Time taken: " + (time_1 - time_0) + " milliseconds.");
     // === Display the result ===
     const inputStringQ = matrixToString(matrixQ);
     const inputStringK = matrixToString(matrixK);
