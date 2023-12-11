@@ -87,6 +87,14 @@ function convertMatrixToFloat32(uint16Matrix) {
     return float32Array;
 }
 
+function printHexValues(array) {
+    for (let i = 0; i < array.length; i++) {
+        let hexValue = array[i].toString(16);
+        console.log(`Element ${i}: ${hexValue}`);
+    }
+}
+
+
 async function multiplyMatrices() {
 
     // === Get a GPU device ===
@@ -94,13 +102,13 @@ async function multiplyMatrices() {
 
     // === Define matrices ===
     const matrixA = new Float32Array([3, 3, // row, col info
-                                      1, 2, 3, 
-                                      4, 5, 6, 
-                                      7, 8, 9]); 
+                                      65537, 0, 0, 
+                                      0, 0, 0, 
+                                      0, 0, 0]); 
     const matrixB = new Float32Array([3, 3, // row, col info
-                                      9, 8, 7, 
-                                      6, 5, 4, 
-                                      3, 2, 1]); 
+                                      60000, 0, 0, 
+                                      0, 0, 0, 
+                                      0, 0, 0]); 
     const resultMatrix = new Uint16Array(3 * 3 + 2); // row, col info
 
     const matrixA16 = convertMatrixToFloat16(matrixA);
@@ -235,4 +243,5 @@ async function multiplyMatrices() {
     document.getElementById("result").textContent = "Input A:\n" + inputStringA + "\n" + 
                                                     "Input B:\n" + inputStringB + "\n" +
                                                     "Result:\n" + resultString;
+    printHexValues(copiedResult);
 }
